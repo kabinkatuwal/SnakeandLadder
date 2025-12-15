@@ -37,6 +37,9 @@
             btnSettings = new Button();
             groupBox1 = new GroupBox();
             aiTimer = new System.Windows.Forms.Timer(components);
+            btnSaveGame = new Button();
+            btnLoadGame = new Button();
+            btnNewGame = new Button();
             groupBox1.SuspendLayout();
             SuspendLayout();
             // 
@@ -97,6 +100,9 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(btnNewGame);
+            groupBox1.Controls.Add(btnLoadGame);
+            groupBox1.Controls.Add(btnSaveGame);
             groupBox1.Controls.Add(lblStatus);
             groupBox1.Controls.Add(btnSettings);
             groupBox1.Controls.Add(btnStartGame);
@@ -113,6 +119,33 @@
             // 
             aiTimer.Interval = 500;
             aiTimer.Tick += aiTimer_Tick;
+            // 
+            // btnSaveGame
+            // 
+            btnSaveGame.Location = new Point(31, 234);
+            btnSaveGame.Name = "btnSaveGame";
+            btnSaveGame.Size = new Size(94, 29);
+            btnSaveGame.TabIndex = 6;
+            btnSaveGame.Text = "Save";
+            btnSaveGame.UseVisualStyleBackColor = true;
+            // 
+            // btnLoadGame
+            // 
+            btnLoadGame.Location = new Point(147, 243);
+            btnLoadGame.Name = "btnLoadGame";
+            btnLoadGame.Size = new Size(94, 29);
+            btnLoadGame.TabIndex = 7;
+            btnLoadGame.Text = "Load Game";
+            btnLoadGame.UseVisualStyleBackColor = true;
+            // 
+            // btnNewGame
+            // 
+            btnNewGame.Location = new Point(66, 291);
+            btnNewGame.Name = "btnNewGame";
+            btnNewGame.Size = new Size(94, 29);
+            btnNewGame.TabIndex = 8;
+            btnNewGame.Text = "New Game";
+            btnNewGame.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -138,5 +171,8 @@
         private Button btnSettings;
         private GroupBox groupBox1;
         private System.Windows.Forms.Timer aiTimer;
+        private Button btnSaveGame;
+        private Button btnNewGame;
+        private Button btnLoadGame;
     }
 }

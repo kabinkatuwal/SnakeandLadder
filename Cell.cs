@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SnakeandLadder
 {
-    internal class Cell
+    public class Cell
     {
         public int Index { get; set; } // The cell number (1 to 100) (cite: 92)
         public bool HasSnake { get; set; } // Flag if the cell is a snake head (cite: 92)

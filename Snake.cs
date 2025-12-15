@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SnakeandLadder
 {
-    internal class Snake
+    public class Snake
     {
         public int Head { get; set; } // The starting cell of the snake (cite: 88)
         public int Tail { get; set; } // The landing cell of the snake (cite: 88)

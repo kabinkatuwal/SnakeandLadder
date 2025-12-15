@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SnakeandLadder
 {
-    internal class GameEvents
+    public class GameEvents
     {
         
 

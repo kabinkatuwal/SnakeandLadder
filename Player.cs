@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SnakeandLadder
 {
-    internal class Player
+    public class Player
     {
         public string Name { get; set; } // Player name (cite: 72)
         public int Position { get; set; } // Current cell number (1-100) (cite: 72)
@@ -27,14 +27,6 @@ namespace SnakeandLadder
         {
             // Creates a new Dice object just to perform the roll
             return new Dice().Roll();
-        }
-
-        // Virtual method allows AIPlayer to override (Polymorphism)
-        public virtual void Move(int steps)
-        {
-            // Logic will be refined later, but this method is here for OOP structure
-            // For now, it just calculates the basic move.
-            Position += steps;
         }
     }
 }

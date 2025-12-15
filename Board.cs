@@ -1,80 +1,110 @@
-﻿using System;
+﻿// Board.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SnakeandLadder;
 
 namespace SnakeandLadder
 {
-    internal class Board
+    public class Board
     {
-        [cite_start]// Dictionary to store all 100 cells (Map<int, Cell> cells) 
         private readonly Dictionary<int, Cell> cells = new Dictionary<int, Cell>();
-
-        // List<Snake> and List<Ladder> (cite: 81)
         private readonly List<Snake> snakes = new List<Snake>();
         private readonly List<Ladder> ladders = new List<Ladder>();
-
-        // Quick look-up for special landings (head/bottom -> tail/top)
         private readonly Dictionary<int, int> specialPositions = new Dictionary<int, int>();
+
+        private static readonly Random random = new Random();
+        private const int MAX_CELL = 100;
+        private const int MIN_CELL = 2;
+        public IEnumerable<Ladder> Ladders => ladders;
+        public IEnumerable<Snake> Snakes => snakes;
 
         public Board()
         {
-            InitializeBoard();
+            GenerateRandomBoard(numSnakes: 8, numLadders: 8);
         }
 
-        private void InitializeBoard()
+        // Constructor used for loading saved games
+        public Board(List<Snake> loadedSnakes, List<Ladder> loadedLadders)
         {
-            // 1. Initialize 100 cells (1 to 100)
+            InitializeCells();
+            LoadBoardSetup(loadedSnakes, loadedLadders);
+        }
+
+        private void InitializeCells()
+        {
+            cells.Clear();
             for (int i = 1; i <= 100; i++)
             {
                 cells[i] = new Cell() { Index = i };
             }
+            specialPositions.Clear();
+            snakes.Clear();
+            ladders.Clear();
+        }
 
-            // 2. Hardcode some Snakes and Ladders (MVP implementation)
-            // LADDERS (Bottom to Top)
-            AddSpecialItem(4, 14, isLadder: true);
-            AddSpecialItem(9, 31, isLadder: true);
-            AddSpecialItem(20, 38, isLadder: true);
-            AddSpecialItem(28, 84, isLadder: true);
+        public void LoadBoardSetup(List<Snake> loadedSnakes, List<Ladder> loadedLadders)
+        {
+            InitializeCells();
+            foreach (var s in loadedSnakes) AddSpecialItem(s.Head, s.Tail, isLadder: false);
+            foreach (var l in loadedLadders) AddSpecialItem(l.Bottom, l.Top, isLadder: true);
+        }
 
-            // SNAKES (Head to Tail)
-            AddSpecialItem(99, 54, isLadder: false);
-            AddSpecialItem(70, 50, isLadder: false);
-            AddSpecialItem(52, 11, isLadder: false);
-            AddSpecialItem(48, 9, isLadder: false);
+        public void GenerateRandomBoard(int numSnakes, int numLadders)
+        {
+            InitializeCells();
+
+            // --- Generate Ladders ---
+            for (int i = 0; i < numLadders; i++)
+            {
+                int bottom, top;
+                do
+                {
+                    bottom = random.Next(MIN_CELL, MAX_CELL - 20);
+                    top = random.Next(bottom + 10, MAX_CELL - 1);
+                } while (specialPositions.ContainsKey(bottom) || specialPositions.ContainsKey(top) || bottom >= top);
+
+                AddSpecialItem(bottom, top, isLadder: true);
+            }
+
+            // --- Generate Snakes ---
+            for (int i = 0; i < numSnakes; i++)
+            {
+                int head, tail;
+                do
+                {
+                    head = random.Next(MAX_CELL / 5, MAX_CELL - 1);
+                    tail = random.Next(MIN_CELL, head - 10);
+                } while (specialPositions.ContainsKey(head) || specialPositions.ContainsKey(tail) || head <= tail || head == MAX_CELL);
+
+                AddSpecialItem(head, tail, isLadder: false);
+            }
         }
 
         private void AddSpecialItem(int start, int end, bool isLadder)
         {
             specialPositions[start] = end;
-
             if (isLadder)
             {
                 ladders.Add(new Ladder() { Bottom = start, Top = end });
                 cells[start].HasLadder = true;
             }
-            else // Is Snake
+            else
             {
                 snakes.Add(new Snake() { Head = start, Tail = end });
                 cells[start].HasSnake = true;
             }
         }
 
-        /// <summary>
-        /// Checks if a position is the start of a snake or ladder and returns the new position.
-        /// </summary>
-        public int GetNewPosition(int pos) // (cite: 82)
+        public int GetNewPosition(int pos)
         {
             if (specialPositions.TryGetValue(pos, out int newPos))
             {
                 return newPos;
             }
-            return pos; // Returns the same position if no snake or ladder is found
+            return pos;
         }
 
-        // Properties for UI to access the list of snakes and ladders for drawing
-        public IEnumerable<Ladder> Ladders => ladders;
-        public IEnumerable<Snake> Snakes => snakes;
+       
     }
 }

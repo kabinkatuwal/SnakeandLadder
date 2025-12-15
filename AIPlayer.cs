@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SnakeandLadder
 {
-    internal class AIPlayer
+    public class AIPlayer: Player
     {
         public int DifficultyLevel { get; set; } // Specific property for AI (cite: 84)
 

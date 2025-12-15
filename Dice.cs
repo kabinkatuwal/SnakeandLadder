@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SnakeandLadder
 {
-    internal class Dice
+    public class Dice
     {
         // A single random object is shared for better performance and randomness.
         private static readonly Random random = new Random();

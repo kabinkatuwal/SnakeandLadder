@@ -1,5 +1,4 @@
-﻿// Game.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +19,6 @@ namespace SnakeandLadder
         public event GameNotificationHandler OnGameWin;
         public event GameNotificationHandler OnGameMessage;
 
-        // Public properties for UI access
         public Player CurrentPlayer => players[currentPlayerIndex];
         public List<Player> Players => players;
         public Board Board => board;
@@ -29,10 +27,10 @@ namespace SnakeandLadder
         public Game(List<Player> initialPlayers)
         {
             players = initialPlayers;
-            board = new Board(); // Generates random board on creation
+            // Initializes the fixed manual board layout
+            board = new Board();
         }
 
-        // Constructor used for loading saved games
         private Game(List<Player> loadedPlayers, Board loadedBoard, int currentIndex, bool running)
         {
             players = loadedPlayers;
@@ -44,9 +42,7 @@ namespace SnakeandLadder
         public void StartGame()
         {
             isRunning = true;
-            // Reset player positions for a new game
             foreach (var p in players) p.Position = 1;
-
             OnGameMessage?.Invoke("Game started! First turn: " + CurrentPlayer.Name);
         }
 
@@ -54,13 +50,14 @@ namespace SnakeandLadder
         {
             if (!isRunning) return;
 
+            // 1. Process the current player's roll
             Player currentPlayer = CurrentPlayer;
-
-            int steps = forcedRoll ?? currentPlayer.RollDice(); // Use forced roll or dice roll
+            int steps = forcedRoll ?? currentPlayer.RollDice();
 
             int oldPosition = currentPlayer.Position;
             int newPosition = oldPosition + steps;
 
+            // 2. Handle boundary logic for the goal (Position 100)
             if (newPosition > 100)
             {
                 newPosition = oldPosition;
@@ -71,29 +68,28 @@ namespace SnakeandLadder
                 OnGameMessage?.Invoke($"{currentPlayer.Name} rolled a {steps}.");
             }
 
-            // 1. Update the player's position (basic move)
+            // 3. Apply movement and check for Snakes/Ladders
             currentPlayer.Position = newPosition;
-
-            // 2. Check for a snake or ladder landing
             int finalPosition = board.GetNewPosition(currentPlayer.Position);
             bool hitSpecial = finalPosition != newPosition;
-
-            // 3. Notify the UI about the move (DELEGATE/EVENT)
-            OnPlayerMove?.Invoke(currentPlayer, steps, oldPosition, finalPosition, hitSpecial);
-
-            // 4. Finalize player position after snake/ladder check
             currentPlayer.Position = finalPosition;
 
-            // 5. Check for win
+            // 4. Check for Win condition before switching turns
             if (CheckWin(currentPlayer))
             {
                 isRunning = false;
+                // Notify UI of final move before ending
+                OnPlayerMove?.Invoke(currentPlayer, steps, oldPosition, finalPosition, hitSpecial);
                 OnGameWin?.Invoke($"🎉 CONGRATULATIONS! {currentPlayer.Name} wins the game!");
                 return;
             }
 
-            // 6. Advance turn
+            // 5. CRITICAL FIX: Advance turn index BEFORE invoking the move event.
+            // This allows Form1.UpdateTurnUI to detect the NEXT player (AI) correctly.
             currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
+
+            // 6. Notify the UI to redraw and check for AI turn automation.
+            OnPlayerMove?.Invoke(currentPlayer, steps, oldPosition, finalPosition, hitSpecial);
         }
 
         public bool CheckWin(Player player)
@@ -101,7 +97,7 @@ namespace SnakeandLadder
             return player.Position == 100;
         }
 
-        // --- SAVE/LOAD ---
+        // --- SAVE/LOAD LOGIC ---
 
         public void SaveGame(string path)
         {
@@ -109,7 +105,6 @@ namespace SnakeandLadder
             {
                 CurrentPlayerIndex = this.currentPlayerIndex,
                 IsRunning = this.isRunning,
-
                 Players = this.players.Select(p => new PlayerState
                 {
                     Name = p.Name,
@@ -117,7 +112,6 @@ namespace SnakeandLadder
                     TokenColor = p.TokenColor,
                     IsAI = p.IsAI
                 }).ToList(),
-
                 Snakes = this.board.Snakes.ToList(),
                 Ladders = this.board.Ladders.ToList()
             };
@@ -146,11 +140,8 @@ namespace SnakeandLadder
                 loadedPlayers[i].Position = state.Players[i].Position;
             }
 
-            var loadedBoard = new Board(state.Snakes, state.Ladders);
-
-            var loadedGame = new Game(loadedPlayers, loadedBoard, state.CurrentPlayerIndex, state.IsRunning);
-
-            return loadedGame;
+            var loadedBoard = new Board();
+            return new Game(loadedPlayers, loadedBoard, state.CurrentPlayerIndex, state.IsRunning);
         }
     }
 }

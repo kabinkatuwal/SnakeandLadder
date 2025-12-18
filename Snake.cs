@@ -8,7 +8,7 @@ namespace SnakeandLadder
 {
     public class Snake
     {
-        public int Head { get; set; } // The starting cell of the snake (cite: 88)
-        public int Tail { get; set; } // The landing cell of the snake (cite: 88)
+        public int Head { get; set; } 
+        public int Tail { get; set; }
     }
 }

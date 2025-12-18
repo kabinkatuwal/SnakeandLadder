@@ -5,7 +5,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using Microsoft.VisualBasic; // Required for Interaction.InputBox
+using Microsoft.VisualBasic;
 
 namespace SnakeandLadder
 {
@@ -17,26 +17,42 @@ namespace SnakeandLadder
         private Image ladderImg;
         private Dictionary<string, Image> playerTokens = new Dictionary<string, Image>();
 
+        private int targetPosition;
+        private Player animatingPlayer;
+        private System.Windows.Forms.Timer moveTimer = new System.Windows.Forms.Timer();
+
         public Form1()
         {
             InitializeComponent();
-            this.Text = "Snake Slide Project - AI Logic Final";
+            this.Text = "Snake Slide";
 
-            // Enable Double Buffering
+            groupBox1.Dock = DockStyle.Right;
+            groupBox1.Width = 280;
+            boardPanel.Dock = DockStyle.Fill;
+
             this.SetStyle(ControlStyles.AllPaintingInWmPaint |
                           ControlStyles.UserPaint |
                           ControlStyles.DoubleBuffer, true);
 
+            typeof(Panel).InvokeMember("DoubleBuffered",
+                System.Reflection.BindingFlags.SetProperty |
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic,
+                null, boardPanel, new object[] { true });
+
             LoadVisualAssets();
             SetupNewGame();
 
-            // Wire up UI Events
+            moveTimer.Interval = 150;
+            moveTimer.Tick += moveTimer_Tick;
+
             rollButton.Click += rollButton_Click;
             btnSaveGame.Click += btnSaveGame_Click;
             btnLoadGame.Click += btnLoadGame_Click;
             btnNewGame.Click += (sender, e) => SetupNewGame();
+
             boardPanel.Paint += boardPanel_Paint;
-            boardPanel.Resize += (s, e) => boardPanel.Invalidate();
+            this.Resize += (s, e) => boardPanel.Invalidate();
         }
 
         private void LoadVisualAssets()
@@ -51,24 +67,22 @@ namespace SnakeandLadder
                 foreach (var color in colors)
                 {
                     string path = Path.Combine(resPath, $"{color}Token.png");
-                    if (File.Exists(path)) playerTokens[color] = Image.FromFile(path);
+                    if (File.Exists(path))
+                        playerTokens[color] = Image.FromFile(path);
                 }
             }
-            catch (Exception)
-            {
-                lblStatus.Text = "Status: Visual assets missing.";
-            }
+            catch { }
         }
 
         private void SetupNewGame()
         {
-            if (game != null) UnsubscribeFromGameEvents();
+            if (game != null)
+                UnsubscribeFromGameEvents();
 
-            // 1. Get Human Player Count
             string countInput = Interaction.InputBox("How many humans? (1 or 2)", "Setup", "1");
-            if (!int.TryParse(countInput, out int humanCount) || humanCount < 1) humanCount = 1;
+            if (!int.TryParse(countInput, out int humanCount) || humanCount < 1)
+                humanCount = 1;
 
-            // 2. Ask for AI
             DialogResult addAI = MessageBox.Show("Add an AI Bot?", "Add AI?", MessageBoxButtons.YesNo);
 
             List<Player> initialPlayers = new List<Player>();
@@ -81,34 +95,26 @@ namespace SnakeandLadder
             }
 
             if (addAI == DialogResult.Yes)
-            {
-                // Ensure this is using the AIPlayer class
                 initialPlayers.Add(new AIPlayer("AI Bot", colors[initialPlayers.Count]));
-            }
 
             game = new Game(initialPlayers);
             SubscribeToGameEvents();
             game.StartGame();
-
-            // FORCE UI UPDATE
             UpdateTurnUI();
             boardPanel.Invalidate();
         }
 
         private void SubscribeToGameEvents()
         {
-            game.OnGameMessage += (message) => lblStatus.Text = message;
             game.OnGameWin += (message) =>
             {
-                lblStatus.Text = message;
                 rollButton.Enabled = false;
                 aiTimer.Stop();
+                moveTimer.Stop();
                 MessageBox.Show(message, "Winner!");
             };
 
             game.OnPlayerMove += HandlePlayerMove;
-
-            // Connect AI timer
             aiTimer.Tick -= aiTimer_Tick;
             aiTimer.Tick += aiTimer_Tick;
         }
@@ -120,31 +126,53 @@ namespace SnakeandLadder
                 game.OnPlayerMove -= HandlePlayerMove;
                 aiTimer.Tick -= aiTimer_Tick;
                 aiTimer.Stop();
+                moveTimer.Stop();
             }
         }
 
         private void HandlePlayerMove(Player player, int steps, int fromPos, int toPos, bool hitSpecial)
         {
             UpdateDiceVisual(steps);
-            boardPanel.Invalidate();
+            animatingPlayer = player;
+            animatingPlayer.Position = fromPos;
+            targetPosition = toPos;
+            rollButton.Enabled = false;
+            moveTimer.Start();
+        }
 
-            // Advance UI and check for AI turn
-            UpdateTurnUI();
+        private void moveTimer_Tick(object sender, EventArgs e)
+        {
+            if (targetPosition < animatingPlayer.Position)
+            {
+                animatingPlayer.Position = targetPosition;
+                moveTimer.Stop();
+                UpdateTurnUI();
+            }
+            else if (animatingPlayer.Position < targetPosition)
+            {
+                animatingPlayer.Position++;
+            }
+            else
+            {
+                moveTimer.Stop();
+                UpdateTurnUI();
+            }
+            boardPanel.Invalidate();
+            boardPanel.Update();
         }
 
         private void UpdateTurnUI()
         {
-            if (game == null || !game.IsRunning) return;
+            if (game == null || !game.IsRunning || moveTimer.Enabled)
+                return;
 
-            // Update Label Text
             lblPlayerInfo.Text = $"Current: {game.CurrentPlayer.Name}";
             rollButton.Text = $"Roll ({game.CurrentPlayer.Name})";
 
-            // If the current player is an AI, start the timer
             if (game.CurrentPlayer.IsAI)
             {
                 rollButton.Enabled = false;
-                aiTimer.Interval = 500; // Snappy 0.5s delay
+                aiTimer.Interval = 2000;
                 aiTimer.Start();
             }
             else
@@ -157,11 +185,8 @@ namespace SnakeandLadder
         private void aiTimer_Tick(object sender, EventArgs e)
         {
             aiTimer.Stop();
-
             if (game != null && game.IsRunning && game.CurrentPlayer.IsAI)
-            {
-                game.NextTurn(); // Computer rolls
-            }
+                game.NextTurn();
         }
 
         private void UpdateDiceVisual(int value)
@@ -180,93 +205,22 @@ namespace SnakeandLadder
                     }
                 }
             }
-            catch (Exception) { }
+            catch { }
         }
 
         private void rollButton_Click(object sender, EventArgs e)
         {
-            if (game != null && game.IsRunning && !game.CurrentPlayer.IsAI)
-            {
+            if (game != null && game.IsRunning && !game.CurrentPlayer.IsAI && !moveTimer.Enabled)
                 game.NextTurn();
-            }
-        }
-
-        private Point GetCellCenterCoordinates(int cellIndex, int cellSize)
-        {
-            int row = (cellIndex - 1) / GRID_SIZE;
-            int col = (cellIndex - 1) % GRID_SIZE;
-            if (row % 2 != 0) col = (GRID_SIZE - 1) - col;
-            int x = col * cellSize + (cellSize / 2);
-            int y = (GRID_SIZE - 1 - row) * cellSize + (cellSize / 2);
-            return new Point(x, y);
-        }
-
-        private void boardPanel_Paint(object sender, PaintEventArgs e)
-        {
-            if (game == null) return;
-            Graphics g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-
-            int smallestDim = Math.Min(boardPanel.Width, boardPanel.Height);
-            int cellSize = smallestDim / GRID_SIZE;
-
-            for (int i = 1; i <= 100; i++)
-            {
-                Point center = GetCellCenterCoordinates(i, cellSize);
-                Rectangle rect = new Rectangle(center.X - cellSize / 2, center.Y - cellSize / 2, cellSize, cellSize);
-                g.FillRectangle((i % 2 == 0) ? Brushes.WhiteSmoke : Brushes.White, rect);
-                g.DrawRectangle(Pens.Gray, rect);
-                g.DrawString(i.ToString(), Font, Brushes.Black, rect.X + 2, rect.Y + 2);
-            }
-
-            foreach (var ladder in game.Board.Ladders)
-            {
-                Point start = GetCellCenterCoordinates(ladder.Bottom, cellSize);
-                Point end = GetCellCenterCoordinates(ladder.Top, cellSize);
-                DrawCorrectedImage(g, start, end, ladderImg, (int)(cellSize * 1.2));
-            }
-
-            foreach (var snake in game.Board.Snakes)
-            {
-                Point head = GetCellCenterCoordinates(snake.Head, cellSize);
-                Point tail = GetCellCenterCoordinates(snake.Tail, cellSize);
-                DrawCorrectedImage(g, head, tail, snakeImg, (int)(cellSize * 1.5));
-            }
-
-            int playerOffset = 0;
-            foreach (var player in game.Players)
-            {
-                Point pos = GetCellCenterCoordinates(player.Position, cellSize);
-                int tSize = (int)(cellSize * 0.65);
-                RectangleF tokenRect = new RectangleF(pos.X - tSize / 2 + playerOffset, pos.Y - tSize / 2 + playerOffset, tSize, tSize);
-
-                if (playerTokens.ContainsKey(player.TokenColor))
-                    g.DrawImage(playerTokens[player.TokenColor], tokenRect);
-                else
-                    g.FillEllipse(new SolidBrush(Color.FromName(player.TokenColor)), tokenRect);
-
-                playerOffset += 4;
-            }
-        }
-
-        private void DrawCorrectedImage(Graphics g, Point start, Point end, Image img, int thickness)
-        {
-            if (img == null) { g.DrawLine(new Pen(Color.Gray, 3), start, end); return; }
-            float dx = end.X - start.X, dy = end.Y - start.Y;
-            float distance = (float)Math.Sqrt(dx * dx + dy * dy);
-            float angle = (float)(Math.Atan2(dy, dx) * 180 / Math.PI);
-            GraphicsState state = g.Save();
-            g.TranslateTransform(start.X, start.Y);
-            g.RotateTransform(angle);
-            g.DrawImage(img, new RectangleF(0, -thickness / 2, distance, thickness));
-            g.Restore(state);
         }
 
         private void btnSaveGame_Click(object sender, EventArgs e)
         {
+            if (game == null) return;
+
             SaveFileDialog sfd = new SaveFileDialog { Filter = "JSON|*.json" };
-            if (sfd.ShowDialog() == DialogResult.OK) game.SaveGame(sfd.FileName);
+            if (sfd.ShowDialog() == DialogResult.OK)
+                game.SaveGame(sfd.FileName);
         }
 
         private void btnLoadGame_Click(object sender, EventArgs e)
@@ -274,12 +228,102 @@ namespace SnakeandLadder
             OpenFileDialog ofd = new OpenFileDialog { Filter = "JSON|*.json" };
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                UnsubscribeFromGameEvents();
-                game = Game.LoadGame(ofd.FileName);
-                SubscribeToGameEvents();
-                UpdateTurnUI();
-                boardPanel.Invalidate();
+                try
+                {
+                    UnsubscribeFromGameEvents();
+                    game = Game.LoadGame(ofd.FileName);
+                    SubscribeToGameEvents();
+                    UpdateTurnUI();
+                    boardPanel.Invalidate();
+                }
+                catch { }
             }
+        }
+
+        private Point GetCellCenterCoordinates(int cellIndex, int cellSize)
+        {
+            int row = (cellIndex - 1) / GRID_SIZE;
+            int col = (cellIndex - 1) % GRID_SIZE;
+
+            if (row % 2 != 0)
+                col = (GRID_SIZE - 1) - col;
+
+            return new Point(
+                col * cellSize + (cellSize / 2),
+                (GRID_SIZE - 1 - row) * cellSize + (cellSize / 2)
+            );
+        }
+
+        private void boardPanel_Paint(object sender, PaintEventArgs e)
+        {
+            if (game == null) return;
+
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            int cellSize = Math.Min(boardPanel.Width, boardPanel.Height) / GRID_SIZE;
+
+            for (int i = 1; i <= 100; i++)
+            {
+                Point center = GetCellCenterCoordinates(i, cellSize);
+                Rectangle rect = new Rectangle(center.X - cellSize / 2, center.Y - cellSize / 2, cellSize, cellSize);
+                Brush cellBrush = (i % 2 == 0) ? Brushes.WhiteSmoke : Brushes.White;
+
+                g.FillRectangle(cellBrush, rect);
+                g.DrawRectangle(Pens.Gray, rect);
+                g.DrawString(i.ToString(), Font, Brushes.Black, rect.X + 2, rect.Y + 2);
+            }
+
+            foreach (var l in game.Board.Ladders)
+            {
+                DrawCorrectedImage(g,
+                    GetCellCenterCoordinates(l.Bottom, cellSize),
+                    GetCellCenterCoordinates(l.Top, cellSize),
+                    ladderImg, (int)(cellSize * 1.2));
+            }
+
+            foreach (var s in game.Board.Snakes)
+            {
+                DrawCorrectedImage(g,
+                    GetCellCenterCoordinates(s.Tail, cellSize),
+                    GetCellCenterCoordinates(s.Head, cellSize),
+                    snakeImg, (int)(cellSize * 1.5));
+            }
+
+            int offset = 0;
+            foreach (var p in game.Players)
+            {
+                Point pos = GetCellCenterCoordinates(p.Position, cellSize);
+                int tSize = (int)(cellSize * 0.65);
+                RectangleF tokenRect = new RectangleF(pos.X - tSize / 2 + offset, pos.Y - tSize / 2 + offset, tSize, tSize);
+
+                if (playerTokens.ContainsKey(p.TokenColor))
+                    g.DrawImage(playerTokens[p.TokenColor], tokenRect);
+                else
+                    g.FillEllipse(new SolidBrush(Color.FromName(p.TokenColor)), tokenRect);
+
+                offset += 4;
+            }
+        }
+
+        private void DrawCorrectedImage(Graphics g, Point start, Point end, Image img, int thickness)
+        {
+            if (img == null)
+            {
+                g.DrawLine(new Pen(Color.Gray, 3), start, end);
+                return;
+            }
+
+            float dx = end.X - start.X;
+            float dy = end.Y - start.Y;
+            float distance = (float)Math.Sqrt(dx * dx + dy * dy);
+            float angle = (float)(Math.Atan2(dy, dx) * 180 / Math.PI);
+
+            GraphicsState state = g.Save();
+            g.TranslateTransform(start.X, start.Y);
+            g.RotateTransform(angle);
+            g.DrawImage(img, new RectangleF(0, -thickness / 2, distance, thickness));
+            g.Restore(state);
         }
     }
 }

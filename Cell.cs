@@ -8,8 +8,8 @@ namespace SnakeandLadder
 {
     public class Cell
     {
-        public int Index { get; set; } // The cell number (1 to 100) (cite: 92)
-        public bool HasSnake { get; set; } // Flag if the cell is a snake head (cite: 92)
+        public int Index { get; set; }
+        public bool HasSnake { get; set; }
         public bool HasLadder { get; set; }
     }
 }

@@ -27,7 +27,6 @@ namespace SnakeandLadder
         public Game(List<Player> initialPlayers)
         {
             players = initialPlayers;
-            // Initializes the fixed manual board layout
             board = new Board();
         }
 
@@ -42,53 +41,41 @@ namespace SnakeandLadder
         public void StartGame()
         {
             isRunning = true;
-            foreach (var p in players) p.Position = 1;
-            OnGameMessage?.Invoke("Game started! First turn: " + CurrentPlayer.Name);
+            foreach (var p in players)
+            {
+                p.Position = 1;
+            }
         }
 
         public void NextTurn(int? forcedRoll = null)
         {
             if (!isRunning) return;
 
-            // 1. Process the current player's roll
             Player currentPlayer = CurrentPlayer;
             int steps = forcedRoll ?? currentPlayer.RollDice();
 
             int oldPosition = currentPlayer.Position;
             int newPosition = oldPosition + steps;
 
-            // 2. Handle boundary logic for the goal (Position 100)
             if (newPosition > 100)
             {
                 newPosition = oldPosition;
-                OnGameMessage?.Invoke($"{currentPlayer.Name} rolled a {steps}. Needs exact roll.");
-            }
-            else
-            {
-                OnGameMessage?.Invoke($"{currentPlayer.Name} rolled a {steps}.");
             }
 
-            // 3. Apply movement and check for Snakes/Ladders
             currentPlayer.Position = newPosition;
             int finalPosition = board.GetNewPosition(currentPlayer.Position);
             bool hitSpecial = finalPosition != newPosition;
             currentPlayer.Position = finalPosition;
 
-            // 4. Check for Win condition before switching turns
             if (CheckWin(currentPlayer))
             {
                 isRunning = false;
-                // Notify UI of final move before ending
                 OnPlayerMove?.Invoke(currentPlayer, steps, oldPosition, finalPosition, hitSpecial);
-                OnGameWin?.Invoke($"🎉 CONGRATULATIONS! {currentPlayer.Name} wins the game!");
+                OnGameWin?.Invoke($"{currentPlayer.Name} wins the game!");
                 return;
             }
 
-            // 5. CRITICAL FIX: Advance turn index BEFORE invoking the move event.
-            // This allows Form1.UpdateTurnUI to detect the NEXT player (AI) correctly.
             currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
-
-            // 6. Notify the UI to redraw and check for AI turn automation.
             OnPlayerMove?.Invoke(currentPlayer, steps, oldPosition, finalPosition, hitSpecial);
         }
 
@@ -96,8 +83,6 @@ namespace SnakeandLadder
         {
             return player.Position == 100;
         }
-
-        // --- SAVE/LOAD LOGIC ---
 
         public void SaveGame(string path)
         {
@@ -118,14 +103,13 @@ namespace SnakeandLadder
 
             string jsonString = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(path, jsonString);
-            OnGameMessage?.Invoke($"Game saved successfully to {path}");
         }
 
         public static Game LoadGame(string path)
         {
             if (!File.Exists(path))
             {
-                throw new FileNotFoundException($"Save file not found at {path}");
+                throw new FileNotFoundException();
             }
 
             string jsonString = File.ReadAllText(path);

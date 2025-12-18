@@ -33,34 +33,32 @@
             rollButton = new Button();
             lblStatus = new Label();
             lblPlayerInfo = new Label();
-            btnStartGame = new Button();
-            btnSettings = new Button();
             groupBox1 = new GroupBox();
+            pbDice = new PictureBox();
             btnNewGame = new Button();
             btnLoadGame = new Button();
             btnSaveGame = new Button();
             aiTimer = new System.Windows.Forms.Timer(components);
-            pbDice = new PictureBox();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pbDice).BeginInit();
             SuspendLayout();
             // 
             // boardPanel
             // 
-            boardPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             boardPanel.BackColor = Color.White;
+            boardPanel.Dock = DockStyle.Fill;
             boardPanel.ImeMode = ImeMode.Disable;
-            boardPanel.Location = new Point(21, 12);
+            boardPanel.Location = new Point(0, 0);
             boardPanel.Name = "boardPanel";
-            boardPanel.Size = new Size(500, 426);
+            boardPanel.Size = new Size(1772, 774);
             boardPanel.TabIndex = 0;
             boardPanel.Paint += boardPanel_Paint;
             // 
             // rollButton
             // 
-            rollButton.Location = new Point(70, 148);
+            rollButton.Location = new Point(88, 351);
             rollButton.Name = "rollButton";
-            rollButton.Size = new Size(94, 29);
+            rollButton.Size = new Size(94, 49);
             rollButton.TabIndex = 1;
             rollButton.Text = "Roll Dice";
             rollButton.UseVisualStyleBackColor = true;
@@ -68,7 +66,7 @@
             // lblStatus
             // 
             lblStatus.AutoSize = true;
-            lblStatus.Location = new Point(41, 33);
+            lblStatus.Location = new Point(36, 39);
             lblStatus.Name = "lblStatus";
             lblStatus.Size = new Size(149, 20);
             lblStatus.TabIndex = 2;
@@ -77,72 +75,60 @@
             // lblPlayerInfo
             // 
             lblPlayerInfo.AutoSize = true;
-            lblPlayerInfo.Location = new Point(70, 110);
+            lblPlayerInfo.Location = new Point(36, 122);
             lblPlayerInfo.Name = "lblPlayerInfo";
             lblPlayerInfo.Size = new Size(101, 20);
             lblPlayerInfo.TabIndex = 3;
             lblPlayerInfo.Text = "Current Player";
             // 
-            // btnStartGame
-            // 
-            btnStartGame.Location = new Point(70, 67);
-            btnStartGame.Name = "btnStartGame";
-            btnStartGame.Size = new Size(94, 29);
-            btnStartGame.TabIndex = 4;
-            btnStartGame.Text = "Start Game";
-            btnStartGame.UseVisualStyleBackColor = true;
-            // 
-            // btnSettings
-            // 
-            btnSettings.Location = new Point(70, 183);
-            btnSettings.Name = "btnSettings";
-            btnSettings.Size = new Size(94, 29);
-            btnSettings.TabIndex = 5;
-            btnSettings.Text = "Settings";
-            btnSettings.UseVisualStyleBackColor = true;
-            // 
             // groupBox1
             // 
-            groupBox1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             groupBox1.Controls.Add(pbDice);
             groupBox1.Controls.Add(btnNewGame);
             groupBox1.Controls.Add(btnLoadGame);
             groupBox1.Controls.Add(btnSaveGame);
             groupBox1.Controls.Add(lblStatus);
-            groupBox1.Controls.Add(btnSettings);
-            groupBox1.Controls.Add(btnStartGame);
             groupBox1.Controls.Add(lblPlayerInfo);
             groupBox1.Controls.Add(rollButton);
-            groupBox1.Location = new Point(538, 12);
+            groupBox1.Dock = DockStyle.Right;
+            groupBox1.Location = new Point(1196, 0);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(250, 431);
+            groupBox1.Size = new Size(576, 774);
             groupBox1.TabIndex = 6;
             groupBox1.TabStop = false;
-            groupBox1.Text = "groupBox1";
+            // 
+            // pbDice
+            // 
+            pbDice.Location = new Point(47, 419);
+            pbDice.Name = "pbDice";
+            pbDice.Size = new Size(213, 196);
+            pbDice.SizeMode = PictureBoxSizeMode.StretchImage;
+            pbDice.TabIndex = 9;
+            pbDice.TabStop = false;
             // 
             // btnNewGame
             // 
-            btnNewGame.Location = new Point(70, 253);
+            btnNewGame.Location = new Point(88, 193);
             btnNewGame.Name = "btnNewGame";
-            btnNewGame.Size = new Size(94, 29);
+            btnNewGame.Size = new Size(94, 46);
             btnNewGame.TabIndex = 8;
             btnNewGame.Text = "New Game";
             btnNewGame.UseVisualStyleBackColor = true;
             // 
             // btnLoadGame
             // 
-            btnLoadGame.Location = new Point(150, 218);
+            btnLoadGame.Location = new Point(147, 266);
             btnLoadGame.Name = "btnLoadGame";
-            btnLoadGame.Size = new Size(94, 29);
+            btnLoadGame.Size = new Size(94, 45);
             btnLoadGame.TabIndex = 7;
             btnLoadGame.Text = "Load Game";
             btnLoadGame.UseVisualStyleBackColor = true;
             // 
             // btnSaveGame
             // 
-            btnSaveGame.Location = new Point(6, 218);
+            btnSaveGame.Location = new Point(17, 266);
             btnSaveGame.Name = "btnSaveGame";
-            btnSaveGame.Size = new Size(94, 29);
+            btnSaveGame.Size = new Size(94, 45);
             btnSaveGame.TabIndex = 6;
             btnSaveGame.Text = "Save";
             btnSaveGame.UseVisualStyleBackColor = true;
@@ -150,22 +136,12 @@
             // aiTimer
             // 
             aiTimer.Interval = 500;
-            //aiTimer.Tick += aiTimer_Tick;
-            // 
-            // pbDice
-            // 
-            pbDice.Location = new Point(30, 288);
-            pbDice.Name = "pbDice";
-            pbDice.Size = new Size(183, 137);
-            pbDice.SizeMode = PictureBoxSizeMode.StretchImage;
-            pbDice.TabIndex = 9;
-            pbDice.TabStop = false;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(1772, 774);
             Controls.Add(groupBox1);
             Controls.Add(boardPanel);
             Name = "Form1";
@@ -182,8 +158,6 @@
         private Button rollButton;
         private Label lblStatus;
         private Label lblPlayerInfo;
-        private Button btnStartGame;
-        private Button btnSettings;
         private GroupBox groupBox1;
         private System.Windows.Forms.Timer aiTimer;
         private Button btnSaveGame;

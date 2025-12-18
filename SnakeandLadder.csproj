@@ -9,11 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\ladder.png" />
-    <None Remove="Resources\snake.png" />
-  </ItemGroup>
-
-  <ItemGroup>
     <COMReference Include="VBIDE">
       <WrapperTool>tlbimp</WrapperTool>
       <VersionMinor>3</VersionMinor>
@@ -27,15 +22,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Resources\ladder.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\snake.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
   </ItemGroup>
 
 </Project>

@@ -8,7 +8,7 @@ namespace SnakeandLadder
 {
     public class Ladder
     {
-        public int Bottom { get; set; } // The starting cell of the ladder (cite: 89)
-        public int Top { get; set; } // The landing cell of the ladder (cite: 89)
+        public int Bottom { get; set; }
+        public int Top { get; set; }
     }
 }
